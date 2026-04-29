@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker info *)",
+      "Bash(xargs wc *)",
+      "Bash(node -e \"const d=require\\('fs'\\).readFileSync\\('/dev/stdin','utf8'\\); const j=JSON.parse\\(d\\); console.log\\(JSON.stringify\\({transactions: j.transactions?.slice\\(0,1\\), sensitive: Object.keys\\(j\\)}, null, 2\\)\\)\")",
+      "Bash(node -e \"const j=require\\('./contracts/broadcast/Ticket.s.sol/1337/run-latest.json'\\); console.log\\(Object.keys\\(j\\)\\); console.log\\(JSON.stringify\\(j.transactions?.[0], null, 2\\)\\)\")"
+    ]
+  }
+}

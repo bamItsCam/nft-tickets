@@ -1,0 +1,8 @@
+*.pdf
+.env
+*.exe
+/bin/
+contracts/out/
+contracts/cache/
+contracts/broadcast/
+contracts/lib/
