@@ -52,7 +52,7 @@ cp .env.example .env  # fill in CONTRACT_ADDRESS and OWNER_KEY from the steps ab
 docker compose up # --build # if you want to rebuild the api each time
 ```
 
-**3.5 Developing w/out rebuilding docker every time
+**3.5 Developing w/out rebuilding docker every time**:
 ```sh
 docker compose up db
 go run .
@@ -100,6 +100,7 @@ Add a migration under `db/migrations/`, run it, then regenerate the query layer:
 ```sh
 migrate -path db/migrations -database $DATABASE_URL up
 sqlc generate
+mockery # to regenerate db mocks
 ```
 
 ### Contract dependencies
