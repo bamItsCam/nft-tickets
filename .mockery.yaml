@@ -1,0 +1,8 @@
+include-auto-generated: true
+packages:
+  github.com/bamItsCam/nft-tickets/internal/db:
+    config:
+      dir: internal/db/mocks
+      filename: querier_mock.go
+    interfaces:
+      Querier:

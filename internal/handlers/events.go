@@ -46,14 +46,13 @@ type EventListTicketsOutput struct {
 }
 
 func (a *App) HandleEventCreate(ctx context.Context, input *EventCreateInput) (*EventOutput, error) {
-	q := db.New(a.Pool)
 	args := db.CreateEventParams{
 		Name:     input.Body.Name,
 		Date:     input.Body.Date,
 		Venue:    input.Body.Venue,
 		Capacity: int32(input.Body.Capacity),
 	}
-	event, err := q.CreateEvent(ctx, args)
+	event, err := a.Querier.CreateEvent(ctx, args)
 	if err != nil {
 		slog.Error("failed to create event", "error", err)
 		return nil, huma.Error500InternalServerError("failed to create event")
@@ -65,8 +64,7 @@ func (a *App) HandleEventCreate(ctx context.Context, input *EventCreateInput) (*
 }
 
 func (a *App) HandleEventList(ctx context.Context, input *struct{}) (*EventListOutput, error) {
-	q := db.New(a.Pool)
-	events, err := q.ListEvents(ctx)
+	events, err := a.Querier.ListEvents(ctx)
 	if err != nil {
 		slog.Error("failed to list events", "error", err)
 		return nil, huma.Error500InternalServerError("failed to list events")
@@ -80,8 +78,7 @@ func (a *App) HandleEventList(ctx context.Context, input *struct{}) (*EventListO
 }
 
 func (a *App) HandleEventGet(ctx context.Context, input *EventGetInput) (*EventOutput, error) {
-	q := db.New(a.Pool)
-	event, err := q.GetEvent(ctx, int32(input.Id))
+	event, err := a.Querier.GetEvent(ctx, int32(input.Id))
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, huma.Error404NotFound("event not found")
 	} else if err != nil {
@@ -95,8 +92,7 @@ func (a *App) HandleEventGet(ctx context.Context, input *EventGetInput) (*EventO
 }
 
 func (a *App) HandleEventListTickets(ctx context.Context, input *EventGetInput) (*EventListTicketsOutput, error) {
-	q := db.New(a.Pool)
-	event, err := q.GetEvent(ctx, int32(input.Id))
+	event, err := a.Querier.GetEvent(ctx, int32(input.Id))
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, huma.Error404NotFound("event not found")
 	} else if err != nil {
@@ -104,7 +100,7 @@ func (a *App) HandleEventListTickets(ctx context.Context, input *EventGetInput) 
 		return nil, huma.Error500InternalServerError("failed to get event")
 	}
 
-	tickets, err := q.ListTicketsByEvent(ctx, event.ID)
+	tickets, err := a.Querier.ListTicketsByEvent(ctx, event.ID)
 	if err != nil {
 		slog.Error("failed to list tickets for event", "event_id", event.ID, "error", err)
 		return nil, huma.Error500InternalServerError("failed to list tickets for event")

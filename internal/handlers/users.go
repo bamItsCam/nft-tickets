@@ -2,13 +2,13 @@ package handlers
 
 import (
 	"context"
-	"encoding/hex"
 	"errors"
 	"log/slog"
 	"time"
 
 	"github.com/bamItsCam/nft-tickets/internal/db"
 	"github.com/danielgtaylor/huma/v2"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/jackc/pgx/v5"
 )
@@ -22,19 +22,21 @@ type UserPublic struct {
 
 type UserCreateInput struct {
 	Body struct {
-		Email string `json:"email"`
+		Email         string `json:"email"`
+		WalletAddress string `json:"walletAddress,omitempty"`
 	}
 }
 
 type UserCreateOutput struct {
-	Body struct {
-		UserPublic
-		PrivateKey string `json:"privateKey"`
-	}
+	Body UserPublic
 }
 
 type UserGetInput struct {
 	Id int `path:"id"`
+}
+
+type UserGetByWalletInput struct {
+	Wallet string `path:"wallet,omitempty"`
 }
 
 type UserOutput struct {
@@ -46,34 +48,35 @@ type UserListTicketsOutput struct {
 }
 
 func (a *App) HandleUserCreate(ctx context.Context, input *UserCreateInput) (*UserCreateOutput, error) {
-	q := db.New(a.Pool)
+	walletAddress := input.Body.WalletAddress
 
-	userPrivateKey, err := crypto.GenerateKey()
-	if err != nil {
-		slog.Error("failed to generate user key", "error", err)
-		return nil, huma.Error500InternalServerError("failed to create user")
+	// if wallet is provided and valid, proceed with self-custodial
+	// otherwise, fall back to generating the wallet here
+	if !common.IsHexAddress(walletAddress) {
+		userPrivateKey, err := crypto.GenerateKey()
+		if err != nil {
+			slog.Error("failed to generate user key", "error", err)
+			return nil, huma.Error500InternalServerError("failed to create user")
+		}
+		walletAddress = crypto.PubkeyToAddress(userPrivateKey.PublicKey).Hex()
 	}
-	address := crypto.PubkeyToAddress(userPrivateKey.PublicKey)
-	userPrivateKeyHex := hex.EncodeToString(crypto.FromECDSA(userPrivateKey))
 
 	args := db.CreateUserParams{
 		Email:         input.Body.Email,
-		WalletAddress: address.String(),
+		WalletAddress: walletAddress,
 	}
-	user, err := q.CreateUser(ctx, args)
+	user, err := a.Querier.CreateUser(ctx, args)
 	if err != nil {
 		slog.Error("failed to create user", "error", err)
 		return nil, huma.Error500InternalServerError("failed to create user")
 	}
 	resp := &UserCreateOutput{}
-	resp.Body.UserPublic = UserPublic(user)
-	resp.Body.PrivateKey = userPrivateKeyHex
+	resp.Body = UserPublic(user)
 	return resp, nil
 }
 
 func (a *App) HandleUserGet(ctx context.Context, input *UserGetInput) (*UserOutput, error) {
-	q := db.New(a.Pool)
-	user, err := q.GetUser(ctx, int32(input.Id))
+	user, err := a.Querier.GetUser(ctx, int32(input.Id))
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, huma.Error404NotFound("user not found")
 	} else if err != nil {
@@ -87,8 +90,7 @@ func (a *App) HandleUserGet(ctx context.Context, input *UserGetInput) (*UserOutp
 }
 
 func (a *App) HandleUserListTickets(ctx context.Context, input *UserGetInput) (*UserListTicketsOutput, error) {
-	q := db.New(a.Pool)
-	user, err := q.GetUser(ctx, int32(input.Id))
+	user, err := a.Querier.GetUser(ctx, int32(input.Id))
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, huma.Error404NotFound("user not found")
 	} else if err != nil {
@@ -96,7 +98,7 @@ func (a *App) HandleUserListTickets(ctx context.Context, input *UserGetInput) (*
 		return nil, huma.Error500InternalServerError("failed to get user")
 	}
 
-	tickets, err := q.ListTicketsByOwner(ctx, user.ID)
+	tickets, err := a.Querier.ListTicketsByOwner(ctx, user.ID)
 	if err != nil {
 		slog.Error("failed to list user's tickets", "user_id", user.ID, "error", err)
 		return nil, huma.Error500InternalServerError("failed to list user's tickets")

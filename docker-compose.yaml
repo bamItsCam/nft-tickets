@@ -10,5 +10,16 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
 
+  api:
+    build: .
+    ports:
+      - "8080:8080"
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://tickets:localdev@db:5432/tickets?sslmode=disable
+      ETH_NODE_URL: http://host.docker.internal:31545
+    depends_on:
+      - db
+
 volumes:
   pgdata:

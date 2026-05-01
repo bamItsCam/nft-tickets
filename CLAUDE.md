@@ -2,8 +2,15 @@
 
 ## Collaboration Style
 
-**The user writes the code.** This project is a learning exercise. Claude should guide, explain, review, and answer questions — but should NOT write implementation code unless explicitly asked. Provide direction, API references, patterns, and feedback. The user does the typing.
+This project is a learning exercise. The user is responsible for writing chain operations and core backend code — Claude should guide, explain, review, and answer questions for those areas.
 
-Agents may be used for research, exploration, and code review — not code generation.
+Claude MAY generate code for:
+- Unit tests
+- Frontend / UX
+- Infrastructure and configuration (docker-compose, Dockerfiles, CI, etc.)
 
-Claude may read files freely. The user writes all code changes.
+Claude should NOT generate code for:
+- Smart contract interactions (mint, burn, transfer, chain reads)
+- Core backend handlers and business logic
+
+Agents may be used for research, exploration, and code review.

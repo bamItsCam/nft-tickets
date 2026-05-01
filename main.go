@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/bamItsCam/nft-tickets/internal/contract"
+	"github.com/bamItsCam/nft-tickets/internal/db"
 	"github.com/bamItsCam/nft-tickets/internal/handlers"
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
@@ -87,10 +88,12 @@ func main() {
 	}
 
 	app := handlers.App{
+		Querier:  db.New(pool),
 		Instance: instance,
+		Client:   client,
+		ChainId:  chainId,
 		Opts:     bind.NewKeyedTransactor(privateKey, chainId),
 		Ticket:   ticket,
-		Pool:     pool,
 		BaseUrl:  baseUrl,
 	}
 
