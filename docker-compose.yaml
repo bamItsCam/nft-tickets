@@ -18,6 +18,8 @@ services:
     environment:
       DATABASE_URL: postgres://tickets:localdev@db:5432/tickets?sslmode=disable
       ETH_NODE_URL: http://host.docker.internal:31545
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - db
 
