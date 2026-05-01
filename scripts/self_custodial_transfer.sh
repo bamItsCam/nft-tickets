@@ -11,7 +11,7 @@ if [ -z "$TICKET_ID" ] || [ -z "$TO_ADDRESS" ] || [ -z "$PRIVATE_KEY" ]; then
 fi
 
 API_URL=${API_URL:-http://localhost:8080}
-RPC_URL=${RPC_URL:-http://localhost:8545}
+RPC_URL=${RPC_URL:-http://localhost:31545}
 
 echo "Preparing transfer for ticket $TICKET_ID to $TO_ADDRESS..."
 PREP=$(curl -sf "$API_URL/tickets/$TICKET_ID/transfer/prepare?to=$TO_ADDRESS")
